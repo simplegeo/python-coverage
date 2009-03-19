@@ -1,0 +1,68 @@
+python-coverage (2.85-1) unstable; urgency=low
+  
+  [ Lars Wirzenius ]
+  * debian/control: Added missing DM-Upload-Allowed field.
+
+  [ Ben Finney ]
+  * New upstream version:
+    + Use os.realpath as part of the fixing of filenames so that symlinks
+      won't confuse things. Thanks, Patrick Mezard.
+      Closes: bug#495963.
+  * debian/rules:
+    + Fix bogus executable permission for non-program files from upstream
+      tarball.
+  * debian/copyright:
+    + Re-work to proposed machine-parseable format.
+  * debian/control:
+    + Comply with ‘Standards-Version: 3.8.1’.
+    + Add ‘Depends: ${misc:Depends}’ for debhelper.
+
+ -- Ben Finney <ben+debian@benfinney.id.au>  Thu, 19 Mar 2009 23:25:23 +1100
+
+python-coverage (2.80-2) unstable; urgency=medium
+
+  [ Ben Finney ]
+  * debian/control
+    + Fix missing Depends: python-pkg-resources. Thanks to Sami Liedes for
+      the bug report. (Closes: bug#496001)
+
+ -- Ben Finney <ben+debian@benfinney.id.au>  Fri, 22 Aug 2008 10:02:53 +1000
+
+python-coverage (2.80-1) unstable; urgency=low
+
+  [ Ben Finney ]
+  * New upstream release.
+  * debian/control
+    + Added Ben Finney to Uploaders.
+    + Set Standards-Version to 3.8.0 (no changes required).
+    + Add Build-Depends-Indep: python-setuptools, as now used by upstream
+      packaging.
+    + Upgrade Build-Depends-Indep: python-central to version that doesn't
+      require 'debian/pycompat'.
+  * debian/pycompat
+    + Remove obsolete file.
+  * debian/watch
+    + Added, pointing to upstream author's site.
+  * debian/rules
+    + Upstream packaging installs program to '/usr/bin/coverage', move to
+      '/usr/bin/python-coverage' to conform with existing versions.
+
+ -- Ben Finney <ben+debian@benfinney.id.au>  Mon, 30 Jun 2008 23:44:57 +1000
+
+python-coverage (2.78-1) unstable; urgency=low
+
+  * New upstream release. Thank you to Ben Finney for helping with the
+    packaging. (Closes: #454982)
+  * Homepage should be among control fields now (Closes: #456498)
+  * Standards-Version upgraded to 3.7.3. No changes required.
+  * Changed section to python.
+  * Added python (>= 2.3) to Build-Depends, because of 'debian/rules
+    clean' needing it.
+
+ -- Lars Wirzenius <liw@iki.fi>  Sun, 11 May 2008 14:37:15 +0300
+
+python-coverage (2.6-1) unstable; urgency=low
+
+  * Initial version. Closes: #405230.
+
+ -- Lars Wirzenius <liw@iki.fi>  Sun, 19 Aug 2007 22:53:59 +0300

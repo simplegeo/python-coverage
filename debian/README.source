@@ -1,0 +1,38 @@
+I am maintaining the python-coverage source code in bzr in the following way:
+
+* http://liw.iki.fi/bzr/python-coverage/ is the bzr repository; all the
+  branches mentioned in this document are in that repository, so to access
+  them append their name to the url.
+  
+* There are three branches: upstream, sid, and tarballs. You need to check
+  out all of them ("bzr branch $BRANCHURL").
+
+* The upstream branch is where I keep the upstream source. It happens to be
+  a single Python file (coverage.py), and that's what upstream publishes.
+  For each new release, I add the new coverage.py to the upstream branch,
+  and commit.
+  
+* I then generate an .orig.tar.gz tarball, from within the upstream branch:
+
+    V=2.6
+    bzr export --root=python-coverage-$V ../tarballs/python-coverage_$V.orig.tar.gz
+
+* The sid branch is where Debian packaging happens. It has the upstream
+  branch as its ancestor: the first revision of upstream got branched into
+  the sid branch, and then debian/* got added. After a new upstream release,
+  I merge from the upstream branch, then update debian/* to match, test,
+  and upload.
+
+  If I have had to make any changes to upstream code, bzr's merge magic
+  will (or is supposed to) handle updating the upstream files in ways that
+  retain my changes. It hasn't happened yet, though.
+
+* Before doing the build, copy the tarball to the parent directory:
+
+    cp ../tarballs/python-coverage_$V.orig.tar.gz ..
+
+* The actual build command I use:
+
+    dpkg-buildpackage -rfakeroot -us -uc -i'\.bzr'
+    lintian ../*.changes
+    linda ../*.changes

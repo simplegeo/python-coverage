@@ -35,7 +35,7 @@ setup(
         ]
     },
     zip_safe = True,    # __file__ appears in the source, but doesn't break zippy-ness.
-    
+
     author = 'Ned Batchelder',
     author_email = 'ned@nedbatchelder.com',
     description = doclines[0],

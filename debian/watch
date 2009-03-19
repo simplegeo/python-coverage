@@ -1,0 +1,10 @@
+# debian/watch
+# Debian uscan file for python-coverage package
+# Manpage: uscan(1)
+
+# Compulsory line, this is a version 3 file
+version=3
+
+# Current version from Ned Batchelder's site
+http://nedbatchelder.com/code/modules/coverage.html \
+    code/modules/coverage-(.*).tar.gz

@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 #             Perforce Defect Tracking Integration Project
 #              <http://www.ravenbrook.com/project/p4dti/>
 #

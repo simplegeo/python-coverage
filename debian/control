@@ -1,0 +1,24 @@
+Source: python-coverage
+Maintainer: Lars Wirzenius <liw@iki.fi>
+Uploaders: Ben Finney <ben+debian@benfinney.id.au>
+DM-Upload-Allowed: yes
+Section: python
+Priority: optional
+Standards-Version: 3.8.1
+Build-Depends-Indep:
+    python-setuptools,
+    python-central (>= 0.6.7)
+Build-Depends: cdbs (>= 0.4.43), debhelper (>= 5.0.38), python (>= 2.3)
+XS-Python-Version: all
+Homepage: http://www.nedbatchelder.com/code/modules/coverage.html
+
+Package: python-coverage
+Architecture: all
+Depends: ${python:Depends},
+    python-pkg-resources,
+    ${misc:Depends}
+XB-Python-Version: ${python:Versions}
+Description: code coverage tool for Python
+ This tool measures which parts (statements) of a Python program are
+ executed while it is run. This is useful for testing: those parts of
+ a program that are not executed by the tests have not been tested.
