@@ -5,10 +5,7 @@ DM-Upload-Allowed: yes
 Section: python
 Priority: optional
 Standards-Version: 3.8.4
-Build-Depends-Indep:
-    python-setuptools,
-    python-central (>= 0.6.7)
-Build-Depends: cdbs (>= 0.4.43), debhelper (>= 5.0.38), python (>= 2.3), python-dev (>= 2.3)
+Build-Depends: cdbs (>= 0.4.43), debhelper (>= 5.0.38), python (>= 2.3), python-dev (>= 2.3), python-setuptools, python-central (>= 0.6.7)
 XS-Python-Version: all
 Homepage: http://www.nedbatchelder.com/code/modules/coverage.html
 
