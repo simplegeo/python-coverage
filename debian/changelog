@@ -1,3 +1,9 @@
+python-coverage (3.4a1-1sg5) lucid; urgency=low
+
+  * UNRELEASED
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Tue, 22 Jun 2010 21:11:15 +0000
+
 python-coverage (3.3.2a1z11+f23873fa2978-1sg0) unstable; urgency=low
 
   * New upstream version.
