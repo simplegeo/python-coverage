@@ -1,3 +1,9 @@
+python-coverage (3.3.1-1sg0) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Ian Eure <ian@simplegeo.com>  Tue, 22 Jun 2010 10:43:35 -0700
+
 python-coverage (2.85-1) unstable; urgency=low
   
   [ Lars Wirzenius ]

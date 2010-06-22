@@ -1,6 +1,6 @@
 Source: python-coverage
-Maintainer: Lars Wirzenius <liw@iki.fi>
-Uploaders: Ben Finney <ben+debian@benfinney.id.au>
+Maintainer: SimpleGeo Nerds <nerds@simplegeo.com>
+Uploaders: Lars Wirzenius <liw@iki.fi>, Ben Finney <ben+debian@benfinney.id.au>, Ian Eure <ian@simplegeo.com>
 DM-Upload-Allowed: yes
 Section: python
 Priority: optional
@@ -8,12 +8,12 @@ Standards-Version: 3.8.1
 Build-Depends-Indep:
     python-setuptools,
     python-central (>= 0.6.7)
-Build-Depends: cdbs (>= 0.4.43), debhelper (>= 5.0.38), python (>= 2.3)
+Build-Depends: cdbs (>= 0.4.43), debhelper (>= 5.0.38), python (>= 2.3), python-dev (>= 2,3)
 XS-Python-Version: all
 Homepage: http://www.nedbatchelder.com/code/modules/coverage.html
 
 Package: python-coverage
-Architecture: all
+Architecture: any
 Depends: ${python:Depends},
     python-pkg-resources,
     ${misc:Depends}
