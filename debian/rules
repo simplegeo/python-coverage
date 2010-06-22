@@ -9,5 +9,4 @@ binary-install/python-coverage::
 	mv debian/python-coverage/usr/bin/coverage \
 	   debian/python-coverage/usr/bin/python-coverage
 	dh_pycentral -ppython-coverage
-	echo chmod -x $(wildcard debian/python-coverage/usr/share/pyshared/coverage/htmlfiles/*) \
-                  $(wildcard debian/python-coverage/usr/share/pyshared/*.egg-info/*)
+	chmod -x $(wildcard debian/python-coverage/usr/share/pyshared/coverage/htmlfiles/*) \
