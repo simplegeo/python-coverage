@@ -1,0 +1,74 @@
+* Release checklist
+
+- Test on:
+    - Windows
+    - Ubuntu
+    - Mac
+    - Pythons 2.3, 2.4, 2.5, 2.6, 3.1
+- Version number in coverage/__init__.py
+    - 3.1a1, 3.1b1, 3.1c1, 3.1
+- Update CHANGES.txt, including release date.
+- Update docstring in setup.py, including "New in x.y:"
+- Update docs
+    - Version, date, and changes in doc/changes.rst
+    - Version and date in doc/index.rst
+    - Version and copyright date in doc/conf.py
+    - Generate new sample_html to get the latest, incl footer version number:
+        cd C:\ned\cog\trunk
+        rmdir/s/q htmlcov
+        coverage run --branch cogapp\test_cogapp.py CogTestsInMemory
+        coverage html -i
+        copy/y htmlcov\*.* C:\ned\coverage\trunk\doc\sample_html
+    - Build and publish docs:
+        $ make px publish
+- Kits:
+    - source .tgz and windows .exe for each Python
+        - $ allkits.cmd
+- Update PyPi:
+    - $ make pypi
+    - upload the kits:
+        - $ allkits.cmd upload
+        # note: this seems to try to upload each file twice, so you'll have a
+        # successful upload, then a failure, but the file gets there.
+    - Visit http://pypi.python.org/pypi?%3Aaction=pkg_edit&name=coverage :
+        - show/hide the proper versions.
+- Tag the tree
+    - hg tag -m "Coverage 3.0.1" coverage-3.0.1
+- Update nedbatchelder.com
+    - Blog post?
+- Update bitbucket:
+    - Issue tracker should get new version number in picker.
+    # Note: don't delete old version numbers: it marks changes on the tickets
+    # with that number.
+- Announce on TIP.
+- Ask Christophe Zwerschke (cito@online.de) to build win64 kits.
+
+
+* Building
+
+- Create PythonXX\Lib\distutils\distutils.cfg::
+    [build]
+    compiler = mingw32
+
+* Testing
+
+(automate these someday)
+
+- On Py 2.x: need setuptools installed
+- On Py 3.x: need Distribute installed
+- Need nose installed
+- Need to have coverage dev-installed
+- In each Python installation to be used, create a "coverage_test_egg.pth"
+  containing::
+
+    c:\ned\coverage\trunk\test\eggsrc\dist\covtestegg1-0.0.0-py2.5.egg
+
+  (or equivalent).
+
+  These go in c:\python26\lib\site-packages or
+  /usr/local/lib/python2.6/dist-packages, for example.
+
+- For complete coverage testing, in each Python installation, create a
+  "zzz_coverage_process_start.pth" containing::
+
+    import coverage; coverage.process_startup()

@@ -1,11 +1,12 @@
 """File wrangling."""
 
-import os, sys
+import fnmatch, os, sys
 
 class FileLocator(object):
     """Understand how filenames work."""
 
     def __init__(self):
+        # The absolute path to our current directory.
         self.relative_dir = self.abs_file(os.curdir) + os.sep
 
         # Cache of results of calling the canonical_filename() method, to
@@ -20,10 +21,12 @@ class FileLocator(object):
         """Return the relative form of `filename`.
 
         The filename will be relative to the current directory when the
-        FileLocator was constructed.
+        `FileLocator` was constructed.
 
         """
-        return filename.replace(self.relative_dir, "")
+        if filename.startswith(self.relative_dir):
+            filename = filename.replace(self.relative_dir, "")
+        return filename
 
     def canonical_filename(self, filename):
         """Return a canonical filename for `filename`.
@@ -73,3 +76,43 @@ class FileLocator(object):
                     data = data.decode('utf8') # TODO: How to do this properly?
                 return data
         return None
+
+
+class TreeMatcher(object):
+    """A matcher for files in a tree."""
+    def __init__(self, directories):
+        self.dirs = directories[:]
+
+    def __repr__(self):
+        return "<TreeMatcher %r>" % self.dirs
+
+    def add(self, directory):
+        """Add another directory to the list we match for."""
+        self.dirs.append(directory)
+
+    def match(self, fpath):
+        """Does `fpath` indicate a file in one of our trees?"""
+        for d in self.dirs:
+            if fpath.startswith(d):
+                if fpath == d:
+                    # This is the same file!
+                    return True
+                if fpath[len(d)] == os.sep:
+                    # This is a file in the directory
+                    return True
+        return False
+
+class FnmatchMatcher(object):
+    """A matcher for files by filename pattern."""
+    def __init__(self, pats):
+        self.pats = pats[:]
+
+    def __repr__(self):
+        return "<FnmatchMatcher %r>" % self.pats
+
+    def match(self, fpath):
+        """Does `fpath` match one of our filename patterns?"""
+        for pat in self.pats:
+            if fnmatch.fnmatch(fpath, pat):
+                return True
+        return False

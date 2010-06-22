@@ -41,6 +41,10 @@
 
 #endif /* Py3k */
 
+/* The values returned to indicate ok or error. */
+#define RET_OK      0
+#define RET_ERROR   -1
+
 /* An entry on the data stack.  For each call frame, we need to record the
     dictionary to capture data, and the last line number executed in that
     frame.
@@ -93,6 +97,7 @@ typedef struct {
 
     /* The parent frame for the last exception event, to fix missing returns. */
     PyFrameObject * last_exc_back;
+    int last_exc_firstlineno;
 
 #if COLLECT_STATS
     struct {
@@ -139,7 +144,7 @@ Tracer_init(Tracer *self, PyObject *args, PyObject *kwds)
     if (self->data_stack == NULL) {
         STATS( self->stats.errors++; )
         PyErr_NoMemory();
-        return -1;
+        return RET_ERROR;
     }
     self->data_stack_alloc = STACK_DELTA;
 
@@ -148,7 +153,7 @@ Tracer_init(Tracer *self, PyObject *args, PyObject *kwds)
 
     self->last_exc_back = NULL;
 
-    return 0;
+    return RET_OK;
 }
 
 static void
@@ -219,7 +224,7 @@ static const char * what_sym[] = {"CALL", "EXC ", "LINE", "RET "};
 static int
 Tracer_record_pair(Tracer *self, int l1, int l2)
 {
-    int ret = 0;
+    int ret = RET_OK;
 
     PyObject * t = PyTuple_New(2);
     if (t != NULL) {
@@ -227,13 +232,13 @@ Tracer_record_pair(Tracer *self, int l1, int l2)
         PyTuple_SET_ITEM(t, 1, MyInt_FromLong(l2));
         if (PyDict_SetItem(self->cur_file_data, t, Py_None) < 0) {
             STATS( self->stats.errors++; )
-            ret = -1;
+            ret = RET_ERROR;
         }
         Py_DECREF(t);
     }
     else {
         STATS( self->stats.errors++; )
-        ret = -1;
+        ret = RET_ERROR;
     }
     return ret;
 }
@@ -244,7 +249,7 @@ Tracer_record_pair(Tracer *self, int l1, int l2)
 static int
 Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
 {
-    int ret = 0;
+    int ret = RET_OK;
     PyObject * filename = NULL;
     PyObject * tracename = NULL;
 
@@ -276,8 +281,8 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
             STATS( self->stats.missed_returns++; )
             if (self->depth >= 0) {
                 if (self->tracing_arcs && self->cur_file_data) {
-                    if (Tracer_record_pair(self, self->last_line, -1) < 0) {
-                        return -1;
+                    if (Tracer_record_pair(self, self->last_line, -self->last_exc_firstlineno) < 0) {
+                        return RET_ERROR;
                     }
                 }
                 SHOWLOG(self->depth, frame->f_lineno, frame->f_code->co_filename, "missedreturn");
@@ -304,7 +309,7 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
                 STATS( self->stats.errors++; )
                 PyErr_NoMemory();
                 self->depth--;
-                return -1;
+                return RET_ERROR;
             }
             self->data_stack = bigger_data_stack;
             self->data_stack_alloc = bigger;
@@ -327,11 +332,11 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
             if (tracename == NULL) {
                 /* An error occurred inside should_trace. */
                 STATS( self->stats.errors++; )
-                return -1;
+                return RET_ERROR;
             }
             if (PyDict_SetItem(self->should_trace_cache, filename, tracename) < 0) {
                 STATS( self->stats.errors++; )
-                return -1;
+                return RET_ERROR;
             }
         }
         else {
@@ -345,13 +350,13 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
                 file_data = PyDict_New();
                 if (file_data == NULL) {
                     STATS( self->stats.errors++; )
-                    return -1;
+                    return RET_ERROR;
                 }
                 ret = PyDict_SetItem(self->data, tracename, file_data);
                 Py_DECREF(file_data);
                 if (ret < 0) {
                     STATS( self->stats.errors++; )
-                    return -1;
+                    return RET_ERROR;
                 }
             }
             self->cur_file_data = file_data;
@@ -372,8 +377,9 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
         /* A near-copy of this code is above in the missing-return handler. */
         if (self->depth >= 0) {
             if (self->tracing_arcs && self->cur_file_data) {
-                if (Tracer_record_pair(self, self->last_line, -1) < 0) {
-                    return -1;
+                int first = frame->f_code->co_firstlineno;
+                if (Tracer_record_pair(self, self->last_line, -first) < 0) {
+                    return RET_ERROR;
                 }
             }
 
@@ -393,7 +399,7 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
                 if (self->tracing_arcs) {
                     /* Tracing arcs: key is (last_line,this_line). */
                     if (Tracer_record_pair(self, self->last_line, frame->f_lineno) < 0) {
-                        return -1;
+                        return RET_ERROR;
                     }
                 }
                 else {
@@ -401,13 +407,13 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
                     PyObject * this_line = MyInt_FromLong(frame->f_lineno);
                     if (this_line == NULL) {
                         STATS( self->stats.errors++; )
-                        return -1;
+                        return RET_ERROR;
                     }
                     ret = PyDict_SetItem(self->cur_file_data, this_line, Py_None);
                     Py_DECREF(this_line);
                     if (ret < 0) {
                         STATS( self->stats.errors++; )
-                        return -1;
+                        return RET_ERROR;
                     }
                 }
             }
@@ -432,6 +438,7 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
         */
         STATS( self->stats.exceptions++; )
         self->last_exc_back = frame->f_back;
+        self->last_exc_firstlineno = frame->f_code->co_firstlineno;
         break;
 
     default:
@@ -439,7 +446,7 @@ Tracer_trace(Tracer *self, PyFrameObject *frame, int what, PyObject *arg)
         break;
     }
 
-    return 0;
+    return RET_OK;
 }
 
 static PyObject *
