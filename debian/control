@@ -4,7 +4,7 @@ Uploaders: Lars Wirzenius <liw@iki.fi>, Ben Finney <ben+debian@benfinney.id.au>,
 DM-Upload-Allowed: yes
 Section: python
 Priority: optional
-Standards-Version: 3.8.1
+Standards-Version: 3.8.4
 Build-Depends-Indep:
     python-setuptools,
     python-central (>= 0.6.7)
