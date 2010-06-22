@@ -3,6 +3,7 @@
 import os, re, shutil
 
 from coverage import __url__, __version__           # pylint: disable-msg=W0611
+from coverage.misc import CoverageException
 from coverage.phystokens import source_token_lines
 from coverage.report import Reporter
 from coverage.templite import Templite
@@ -31,18 +32,22 @@ class HtmlReporter(Reporter):
         self.files = []
         self.arcs = coverage.data.has_arcs()
 
-    def report(self, morfs, directory, omit_prefixes=None):
+    def report(self, morfs, directory, omit=None, include=None):
         """Generate an HTML report for `morfs`.
 
         `morfs` is a list of modules or filenames.  `directory` is where to put
-        the HTML files. `omit_prefixes` is a list of strings, prefixes of
-        modules to omit from the report.
+        the HTML files.
+
+        See `coverage.report()` for other arguments.
 
         """
         assert directory, "must provide a directory for html reporting"
 
         # Process all the files.
-        self.report_files(self.html_file, morfs, directory, omit_prefixes)
+        self.report_files(self.html_file, morfs, directory, omit, include)
+
+        if not self.files:
+            raise CoverageException("No data to report.")
 
         # Write the index file.
         self.index_file()
@@ -93,7 +98,7 @@ class HtmlReporter(Reporter):
                 n_par += 1
                 annlines = []
                 for b in missing_branch_arcs[lineno]:
-                    if b == -1:
+                    if b < 0:
                         annlines.append("exit")
                     else:
                         annlines.append(str(b))
@@ -157,7 +162,7 @@ class HtmlReporter(Reporter):
 # Helpers for templates and generating HTML
 
 def escape(t):
-    """HTML-escape the text in t."""
+    """HTML-escape the text in `t`."""
     return (t
             # Convert HTML special chars into HTML entities.
             .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -170,14 +175,14 @@ def escape(t):
         )
 
 def format_pct(p):
-    """Format a percentage value for the HTML reports."""
+    """Format `p` as a percentage value for the HTML reports."""
     return "%.0f" % p
 
 def spaceless(html):
     """Squeeze out some annoying extra space from an HTML string.
 
-    Nicely-formatted templates mean lots of extra space in the result.  Get
-    rid of some.
+    Nicely-formatted templates mean lots of extra space in the result.
+    Get rid of some.
 
     """
     html = re.sub(">\s+<p ", ">\n<p ", html)

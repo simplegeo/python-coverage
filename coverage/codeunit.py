@@ -1,18 +1,21 @@
 """Code unit (module) handling for Coverage."""
 
-import glob, os
+import fnmatch, glob, os
 
 from coverage.backward import string_class, StringIO
 from coverage.misc import CoverageException
 
 
-def code_unit_factory(morfs, file_locator, omit_prefixes=None):
+def code_unit_factory(morfs, file_locator, omit=None, include=None):
     """Construct a list of CodeUnits from polymorphic inputs.
 
     `morfs` is a module or a filename, or a list of same.
+
     `file_locator` is a FileLocator that can help resolve filenames.
-    `omit_prefixes` is a list of prefixes.  CodeUnits that match those prefixes
-    will be omitted from the list.
+
+    `include` is a list of filename patterns. Only CodeUnits that match those
+    patterns will be included in the list. `omit` is a list of patterns to omit
+    from the list.
 
     Returns a list of CodeUnit objects.
 
@@ -33,21 +36,30 @@ def code_unit_factory(morfs, file_locator, omit_prefixes=None):
 
     code_units = [CodeUnit(morf, file_locator) for morf in morfs]
 
-    if omit_prefixes:
-        assert not isinstance(omit_prefixes, string_class) # common mistake
-        prefixes = [file_locator.abs_file(p) for p in omit_prefixes]
+    if include:
+        assert not isinstance(include, string_class) # common mistake
+        patterns = [file_locator.abs_file(p) for p in include]
         filtered = []
         for cu in code_units:
-            for prefix in prefixes:
-                if cu.filename.startswith(prefix):
+            for pattern in patterns:
+                if fnmatch.fnmatch(cu.filename, pattern):
+                    filtered.append(cu)
+                    break
+        code_units = filtered
+
+    if omit:
+        assert not isinstance(omit, string_class) # common mistake
+        patterns = [file_locator.abs_file(p) for p in omit]
+        filtered = []
+        for cu in code_units:
+            for pattern in patterns:
+                if fnmatch.fnmatch(cu.filename, pattern):
                     break
             else:
                 filtered.append(cu)
-
         code_units = filtered
 
     return code_units
-
 
 class CodeUnit(object):
     """Code unit: a filename or module.
@@ -124,8 +136,8 @@ class CodeUnit(object):
         if self.modname:
             return self.modname.replace('.', '_')
         else:
-            root = os.path.splitdrive(os.path.splitext(self.name)[0])[1]
-            return root.replace('\\', '_').replace('/', '_')
+            root = os.path.splitdrive(self.name)[1]
+            return root.replace('\\', '_').replace('/', '_').replace('.', '_')
 
     def source_file(self):
         """Return an open file for reading the source of the code unit."""

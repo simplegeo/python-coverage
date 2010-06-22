@@ -10,71 +10,81 @@ from coverage.misc import CoverageException, ExceptionDuringRun
 class Opts(object):
     """A namespace class for individual options we'll build parsers from."""
 
-    append = optparse.Option(
+    append = optparse.make_option(
         '-a', '--append', action='store_false', dest="erase_first",
         help="Append coverage data to .coverage, otherwise it is started "
                 "clean with each run."
         )
-    branch = optparse.Option(
+    branch = optparse.make_option(
         '', '--branch', action='store_true',
         help="Measure branch coverage in addition to statement coverage."
         )
-    directory = optparse.Option(
+    directory = optparse.make_option(
         '-d', '--directory', action='store',
         metavar="DIR",
         help="Write the output files to DIR."
         )
-    help = optparse.Option(
+    help = optparse.make_option(
         '-h', '--help', action='store_true',
         help="Get help on this command."
         )
-    ignore_errors = optparse.Option(
+    ignore_errors = optparse.make_option(
         '-i', '--ignore-errors', action='store_true',
         help="Ignore errors while reading source files."
         )
-    pylib = optparse.Option(
+    include = optparse.make_option(
+        '', '--include', action='store',
+        metavar="PAT1,PAT2,...",
+        help="Include files only when their filename path matches one of "
+                "these patterns.  Usually needs quoting on the command line."
+        )
+    pylib = optparse.make_option(
         '-L', '--pylib', action='store_true',
         help="Measure coverage even inside the Python installed library, "
                 "which isn't done by default."
         )
-    show_missing = optparse.Option(
+    show_missing = optparse.make_option(
         '-m', '--show-missing', action='store_true',
         help="Show line numbers of statements in each module that weren't "
                 "executed."
         )
-    old_omit = optparse.Option(
+    old_omit = optparse.make_option(
         '-o', '--omit', action='store',
-        metavar="PRE1,PRE2,...",
-        help="Omit files when their filename path starts with one of these "
-                "prefixes."
+        metavar="PAT1,PAT2,...",
+        help="Omit files when their filename matches one of these patterns. "
+                "Usually needs quoting on the command line."
         )
-    omit = optparse.Option(
+    omit = optparse.make_option(
         '', '--omit', action='store',
-        metavar="PRE1,PRE2,...",
-        help="Omit files when their filename path starts with one of these "
-                "prefixes."
+        metavar="PAT1,PAT2,...",
+        help="Omit files when their filename matches one of these patterns. "
+                "Usually needs quoting on the command line."
         )
-    output_xml = optparse.Option(
+    output_xml = optparse.make_option(
         '-o', '', action='store', dest="outfile",
         metavar="OUTFILE",
         help="Write the XML report to this file. Defaults to 'coverage.xml'"
         )
-    parallel_mode = optparse.Option(
+    parallel_mode = optparse.make_option(
         '-p', '--parallel-mode', action='store_true',
         help="Append the machine name, process id and random number to the "
                 ".coverage data file name to simplify collecting data from "
                 "many processes."
         )
-    rcfile = optparse.Option(
+    rcfile = optparse.make_option(
         '', '--rcfile', action='store',
         help="Specify configuration file.  Defaults to '.coveragerc'"
         )
-    timid = optparse.Option(
+    source = optparse.make_option(
+        '', '--source', action='store', metavar="SRC1,SRC2,...",
+        help="A list of packages or directories of code to be measured."
+        )
+    timid = optparse.make_option(
         '', '--timid', action='store_true',
         help="Use a simpler but slower trace method.  Try this if you get "
                 "seemingly impossible results!"
         )
-    version = optparse.Option(
+    version = optparse.make_option(
         '', '--version', action='store_true',
         help="Display version information and exit."
         )
@@ -98,11 +108,13 @@ class CoverageOptionParser(optparse.OptionParser, object):
             directory=None,
             help=None,
             ignore_errors=None,
+            include=None,
             omit=None,
             parallel_mode=None,
             pylib=None,
             rcfile=True,
             show_missing=None,
+            source=None,
             timid=None,
             erase_first=None,
             version=None,
@@ -219,6 +231,7 @@ CMDS = {
             Opts.directory,
             Opts.ignore_errors,
             Opts.omit,
+            Opts.include,
             ] + GLOBAL_ARGS,
         usage = "[options] [modules]",
         description = "Make annotated copies of the given files, marking "
@@ -256,6 +269,7 @@ CMDS = {
             Opts.directory,
             Opts.ignore_errors,
             Opts.omit,
+            Opts.include,
             ] + GLOBAL_ARGS,
         usage = "[options] [modules]",
         description = "Create an HTML report of the coverage of the files.  "
@@ -267,6 +281,7 @@ CMDS = {
         [
             Opts.ignore_errors,
             Opts.omit,
+            Opts.include,
             Opts.show_missing,
             ] + GLOBAL_ARGS,
         usage = "[options] [modules]",
@@ -280,6 +295,9 @@ CMDS = {
             Opts.pylib,
             Opts.parallel_mode,
             Opts.timid,
+            Opts.source,
+            Opts.omit,
+            Opts.include,
             ] + GLOBAL_ARGS,
         defaults = {'erase_first': True},
         cmd = "run",
@@ -291,6 +309,7 @@ CMDS = {
         [
             Opts.ignore_errors,
             Opts.omit,
+            Opts.include,
             Opts.output_xml,
             ] + GLOBAL_ARGS,
         cmd = "xml",
@@ -426,6 +445,11 @@ class CoverageScript(object):
             self.help_fn("Nothing to do.")
             return ERR
 
+        # Listify the list options.
+        source = unshell_list(options.source)
+        omit = unshell_list(options.omit)
+        include = unshell_list(options.include)
+
         # Do something.
         self.coverage = self.covpkg.coverage(
             data_suffix = options.parallel_mode,
@@ -433,6 +457,9 @@ class CoverageScript(object):
             timid = options.timid,
             branch = options.branch,
             config_file = options.rcfile,
+            source = source,
+            omit = omit,
+            include = include,
             )
 
         if 'debug' in options.actions:
@@ -486,15 +513,12 @@ class CoverageScript(object):
             self.coverage.save()
 
         # Remaining actions are reporting, with some common options.
-        report_args = {
-            'morfs': args,
-            'ignore_errors': options.ignore_errors,
-            }
-
-        omit = None
-        if options.omit:
-            omit = options.omit.split(',')
-        report_args['omit_prefixes'] = omit
+        report_args = dict(
+            morfs = args,
+            ignore_errors = options.ignore_errors,
+            omit = omit,
+            include = include,
+            )
 
         if 'report' in options.actions:
             self.coverage.report(
@@ -510,6 +534,20 @@ class CoverageScript(object):
             self.coverage.xml_report(outfile=outfile, **report_args)
 
         return OK
+
+
+def unshell_list(s):
+    """Turn a command-line argument into a list."""
+    if not s:
+        return None
+    if sys.platform == 'win32':
+        # When running coverage as coverage.exe, some of the behavior
+        # of the shell is emulated: wildcards are expanded into a list of
+        # filenames.  So you have to single-quote patterns on the command
+        # line, but (not) helpfully, the single quotes are included in the
+        # argument, so we have to strip them off here.
+        s = s.strip("'")
+    return s.split(',')
 
 
 HELP_TOPICS = r"""

@@ -20,11 +20,13 @@ class CoverageConfig(object):
         self.data_file = ".coverage"
         self.parallel = False
         self.timid = False
+        self.source = None
 
         # Defaults for [report]
         self.exclude_list = ['(?i)# *pragma[: ]*no *cover']
         self.ignore_errors = False
-        self.omit_prefixes = None
+        self.omit = None
+        self.include = None
 
         # Defaults for [html]
         self.html_dir = "htmlcov"
@@ -67,6 +69,12 @@ class CoverageConfig(object):
             self.parallel = cp.getboolean('run', 'parallel')
         if cp.has_option('run', 'timid'):
             self.timid = cp.getboolean('run', 'timid')
+        if cp.has_option('run', 'source'):
+            self.source = self.get_list(cp, 'run', 'source')
+        if cp.has_option('run', 'omit'):
+            self.omit = self.get_list(cp, 'run', 'omit')
+        if cp.has_option('run', 'include'):
+            self.include = self.get_list(cp, 'run', 'include')
 
         # [report]
         if cp.has_option('report', 'exclude_lines'):
@@ -76,15 +84,9 @@ class CoverageConfig(object):
         if cp.has_option('report', 'ignore_errors'):
             self.ignore_errors = cp.getboolean('report', 'ignore_errors')
         if cp.has_option('report', 'omit'):
-            # omit is a list of prefixes, on separate lines, or separated by
-            # commas.
-            omit_list = cp.get('report', 'omit')
-            self.omit_prefixes = []
-            for omit_line in omit_list.split('\n'):
-                for omit in omit_line.split(','):
-                    omit = omit.strip()
-                    if omit:
-                        self.omit_prefixes.append(omit)
+            self.omit = self.get_list(cp, 'report', 'omit')
+        if cp.has_option('report', 'include'):
+            self.include = self.get_list(cp, 'report', 'include')
 
         # [html]
         if cp.has_option('html', 'directory'):
@@ -93,3 +95,21 @@ class CoverageConfig(object):
         # [xml]
         if cp.has_option('xml', 'output'):
             self.xml_output = cp.get('xml', 'output')
+
+    def get_list(self, cp, section, option):
+        """Read a list of strings from the ConfigParser `cp`.
+
+        The value of `section` and `option` is treated as a comma- and newline-
+        separated list of strings.  Each value is stripped of whitespace.
+
+        Returns the list of strings.
+
+        """
+        value_list = cp.get(section, option)
+        values = []
+        for value_line in value_list.split('\n'):
+            for value in value_line.split(','):
+                value = value.strip()
+                if value:
+                    values.append(value)
+        return values
