@@ -5,13 +5,8 @@ DEB_PYTHON_SYSTEM=pycentral
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/python-distutils.mk
 
-BOGUS_EXECUTABLE_FILES = README.txt
-BOGUS_EXECUTABLE_FILES += setup.py setup.cfg PKG-INFO
-BOGUS_EXECUTABLE_FILES += $(wildcard coverage.egg-info/*)
-BOGUS_EXECUTABLE_FILES += $(wildcard coverage/*.py)
-
 build:
-	chmod -x ${BOGUS_EXECUTABLE_FILES}
+	@echo chmod -x ${BOGUS_EXECUTABLE_FILES}
 
 binary-install/python-coverage::
 	mv debian/python-coverage/usr/bin/coverage \
