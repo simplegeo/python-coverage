@@ -16,7 +16,8 @@ Package: python-coverage
 Architecture: any
 Depends: ${python:Depends},
     python-pkg-resources,
-    ${misc:Depends}
+    ${misc:Depends},
+    ${shlibs:Depends}
 XB-Python-Version: ${python:Versions}
 Description: code coverage tool for Python
  This tool measures which parts (statements) of a Python program are
