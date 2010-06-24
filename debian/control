@@ -15,6 +15,7 @@ Depends: ${python:Depends},
     python-pkg-resources,
     ${misc:Depends},
     ${shlibs:Depends}
+Conflicts: python-nose (< 0.11.3)
 XB-Python-Version: ${python:Versions}
 Description: code coverage tool for Python
  This tool measures which parts (statements) of a Python program are
